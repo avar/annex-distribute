@@ -74,6 +74,7 @@ REPOSITORY: for my $repository (keys %repositories) {
                 path     => $annex_path,
                 callback => sub {
                     chdir $annex_path;
+                    system "git annex sync";
                     system "git annex get .";
                 },
             };
