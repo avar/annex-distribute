@@ -60,6 +60,7 @@ my %repositories = (
 );
 
 my @todo_get;
+my @todo_cleanup;
 
 # Ensure that all the repositories have everything else added as a
 # remote annex so "sync" anywhere will sync the whole network.
@@ -87,6 +88,16 @@ REPOSITORY: for my $repository (keys %repositories) {
             };
         }
 
+        push @todo_cleanup => {
+            path => $annex_path,
+            callback => sub {
+                chdir $annex_path;
+                system "git prune --expire now";
+                system "git gc";
+                system "git repack -A -d";
+            },
+        };
+
         R_REPOSITORY: for my $r_repository (grep { $_ ne $repository } keys %repositories) {
             my ($r_host, $r_path, $r_annexes, $r_bare, $r_mode) = @{$repositories{$r_repository}}{qw(host path annexes bare mode)};
 
@@ -109,14 +120,28 @@ REPOSITORY: for my $repository (keys %repositories) {
             system qq[git remote add '$r_repository' '$r_url' 2>/dev/null || :];
             # But set it to whatever the canonical values are now
             system qq[git config 'remote.$r_repository.url' '$r_url'];
+            # Make sure we don't do gc on push
+            system qq[git config gc.auto 0];
         }
     }
 }
 
-# Now sync to the repositories we're backing up for
-for my $todo_get (@todo_get) {
-    my ($path, $callback) = @$todo_get{qw(path callback)};
+if ("@ARGV" =~ /\bcleanup\b/) {
+    # Now sync to the repositories we're backing up for
+    for my $todo_get (@todo_cleanup) {
+        my ($path, $callback) = @$todo_get{qw(path callback)};
 
-    print "Doing a backup to <$path>\n" if DEBUG;
-    $callback->();
+        print "Doing a cleanup of <$path>\n" if DEBUG;
+        $callback->();
+    }
+}
+
+if ("@ARGV" !~ /\bno-backup\b/) {
+    # Now sync to the repositories we're backing up for
+    for my $todo_get (@todo_get) {
+        my ($path, $callback) = @$todo_get{qw(path callback)};
+
+        print "Doing a backup to <$path>\n" if DEBUG;
+        $callback->();
+    }
 }
