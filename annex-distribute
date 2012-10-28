@@ -5,7 +5,6 @@ use autodie qw(:all);
 use Sys::Hostname qw(hostname);
 use Data::Dumper;
 use constant DEBUG => 1;
-use Data::Dumper;
 
 use constant {
     # This only gets synced to/from manually
