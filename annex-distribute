@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use autodie;
+
+my %repositories = (
+    'snth-caddy' => {
+        annexes => [ qw( audio video avar-images ) ],
+        path    => '/media/caddy/annex',
+    },
+    'freeagent-goflex-drive' => {
+        annexes => [ qw( audio video avar-images ) ],
+        path => '/media/FreeAgent GoFlex Drive/annex',
+    },
+    'goflex-backup' => {
+        annexes => [ qw( audio video avar-images ) ],
+       path => '/media/GoFlex Backup/annex/',
+    },
+    'wnixis' => {
+        bare => 1,
+        path => '/provider/annex/',
+        host => 'w.nix.is',
+    },
+);
