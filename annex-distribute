@@ -5,6 +5,14 @@ use autodie qw(:all);
 use Sys::Hostname qw(hostname);
 use Data::Dumper;
 use constant DEBUG => 1;
+use Data::Dumper;
+
+use constant {
+    # This only gets synced to/from manually
+    MODE_MANUAL => 1,
+    # This tries to get all content from everywhere
+    MODE_BACKUP => 2,
+};
 
 my %repositories = (
     'snth' => {
@@ -12,50 +20,67 @@ my %repositories = (
         annexes => [ qw( audio video avar-images ) ],
         path    => '/home/avar/annex',
         host    => 'snth',
+        mode    => MODE_MANUAL,
     },
     'snth-caddy' => {
         bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
         path    => '/media/caddy/annex',
         host    => 'snth',
+        mode    => MODE_MANUAL,
     },
     'freeagent-goflex-drive' => {
         bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
         path    => '/media/FreeAgent GoFlex Drive/annex',
         host    => 'snth',
+        mode    => MODE_BACKUP,
     },
     'goflex-backup' => {
         bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
         path    => '/media/GoFlex Backup/annex',
         host    => 'snth',
+        mode    => MODE_BACKUP,
     },
     'wnixis' => {
         bare    => 1,
         annexes => [ qw( audio video ) ],
         path    => '/provider/annex',
         host    => 'w.nix.is',
+        mode    => MODE_MANUAL,
     },
 );
+
+my @todo_get;
 
 # Ensure that all the repositories have everything else added as a
 # remote annex so "sync" anywhere will sync the whole network.
 REPOSITORY: for my $repository (keys %repositories) {
-    my ($host, $path, $annexes, $bare) = @{$repositories{$repository}}{qw(host path annexes bare)};
+    my ($host, $path, $annexes, $bare, $mode) = @{$repositories{$repository}}{qw(host path annexes bare mode)};
 
     # Don't know what to do about remote hosts yet
     next REPOSITORY unless $host eq hostname();
 
-    print "Got host <$host> path <$path> annexes <@$annexes> and bare <$bare>\n" if DEBUG;
+    print "Got host <$host> path <$path> annexes <@$annexes> bare:<$bare>, mode:<$mode>\n" if DEBUG;
 
     for my $annex (@$annexes) {
-        print "  Processing annex <$annex>, chdir'd to <$path/$annex>\n" if DEBUG;
+        my $annex_path = "$path/$annex";
+        print "  Processing annex <$annex>, chdir-ing to <$annex_path>\n" if DEBUG;
+        chdir $annex_path;
 
-        chdir "$path/$annex";
+        if ($mode == MODE_BACKUP) {
+            push @todo_get => {
+                path     => $annex_path,
+                callback => sub {
+                    chdir $annex_path;
+                    system "git annex get .";
+                },
+            };
+        }
 
         R_REPOSITORY: for my $r_repository (grep { $_ ne $repository } keys %repositories) {
-            my ($r_host, $r_path, $r_annexes, $r_bare) = @{$repositories{$r_repository}}{qw(host path annexes bare)};
+            my ($r_host, $r_path, $r_annexes, $r_bare, $r_mode) = @{$repositories{$r_repository}}{qw(host path annexes bare mode)};
 
             my $r_url = $r_host eq hostname() ? $r_path : "ssh://$r_host$r_path";
             $r_url .= "/$annex";
@@ -65,7 +90,7 @@ REPOSITORY: for my $repository (keys %repositories) {
             @r_annexes{@$r_annexes} = ();
 
             my $r_should_add = exists $r_annexes{$annex};
-            printf "    Will %s adding remote <$r_host> url <$r_url> path <$r_path> annexes <@$r_annexes> and bare <$r_bare>\n",
+            printf "    Will %s adding remote <$r_host> url <$r_url> path <$r_path> annexes <@$r_annexes> bare:<$r_bare>, mode:<$r_mode>\n",
                   $r_should_add ? 'be' : 'NOT BE' if DEBUG;
             next R_REPOSITORY unless $r_should_add;
 
@@ -75,4 +100,12 @@ REPOSITORY: for my $repository (keys %repositories) {
             system qq[git config 'remote.$r_repository.url' '$r_url'];
         }
     }
+}
+
+# Now sync to the repositories we're backing up for
+for my $todo_get (@todo_get) {
+    my ($path, $callback) = @$todo_get{qw(path callback)};
+
+    print "Doing a backup to <$path>\n" if DEBUG;
+    $callback->();
 }
