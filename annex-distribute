@@ -50,6 +50,13 @@ my %repositories = (
         host    => 'w.nix.is',
         mode    => MODE_MANUAL,
     },
+    'provider' => {
+        bare    => 1,
+        annexes => [ qw( audio video ) ],
+        path    => '/provider/annex',
+        host    => 'provider.dsg.to',
+        mode    => MODE_MANUAL,
+    },
 );
 
 my @todo_get;
