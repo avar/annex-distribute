@@ -1,24 +1,78 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use autodie;
+use autodie qw(:all);
+use Sys::Hostname qw(hostname);
+use Data::Dumper;
+use constant DEBUG => 1;
 
 my %repositories = (
+    'snth' => {
+        bare    => 0,
+        annexes => [ qw( audio video avar-images ) ],
+        path    => '/home/avar/annex',
+        host    => 'snth',
+    },
     'snth-caddy' => {
+        bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
         path    => '/media/caddy/annex',
+        host    => 'snth',
     },
     'freeagent-goflex-drive' => {
+        bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
-        path => '/media/FreeAgent GoFlex Drive/annex',
+        path    => '/media/FreeAgent GoFlex Drive/annex',
+        host    => 'snth',
     },
     'goflex-backup' => {
+        bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
-       path => '/media/GoFlex Backup/annex/',
+        path    => '/media/GoFlex Backup/annex',
+        host    => 'snth',
     },
     'wnixis' => {
-        bare => 1,
-        path => '/provider/annex/',
-        host => 'w.nix.is',
+        bare    => 1,
+        annexes => [ qw( audio video ) ],
+        path    => '/provider/annex',
+        host    => 'w.nix.is',
     },
 );
+
+# Ensure that all the repositories have everything else added as a
+# remote annex so "sync" anywhere will sync the whole network.
+REPOSITORY: for my $repository (keys %repositories) {
+    my ($host, $path, $annexes, $bare) = @{$repositories{$repository}}{qw(host path annexes bare)};
+
+    # Don't know what to do about remote hosts yet
+    next REPOSITORY unless $host eq hostname();
+
+    print "Got host <$host> path <$path> annexes <@$annexes> and bare <$bare>\n" if DEBUG;
+
+    for my $annex (@$annexes) {
+        print "  Processing annex <$annex>, chdir'd to <$path/$annex>\n" if DEBUG;
+
+        chdir "$path/$annex";
+
+        R_REPOSITORY: for my $r_repository (grep { $_ ne $repository } keys %repositories) {
+            my ($r_host, $r_path, $r_annexes, $r_bare) = @{$repositories{$r_repository}}{qw(host path annexes bare)};
+
+            my $r_url = $r_host eq hostname() ? $r_path : "ssh://$r_host$r_path";
+            $r_url .= "/$annex";
+            $r_url .= "-annex.git" if $r_bare;
+
+            my %r_annexes;
+            @r_annexes{@$r_annexes} = ();
+
+            my $r_should_add = exists $r_annexes{$annex};
+            printf "    Will %s adding remote <$r_host> url <$r_url> path <$r_path> annexes <@$r_annexes> and bare <$r_bare>\n",
+                  $r_should_add ? 'be' : 'NOT BE' if DEBUG;
+            next R_REPOSITORY unless $r_should_add;
+
+            # Maybe the remote exists already
+            system qq[git remote add '$r_repository' '$r_url' 2>/dev/null || :];
+            # But set it to whatever the canonical values are now
+            system qq[git config 'remote.$r_repository.url' '$r_url'];
+        }
+    }
+}
