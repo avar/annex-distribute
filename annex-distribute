@@ -94,6 +94,9 @@ REPOSITORY: for my $repository (keys %repositories) {
                   $r_should_add ? 'be' : 'NOT BE' if DEBUG;
             next R_REPOSITORY unless $r_should_add;
 
+
+            # If this was cloned from anywhere just forget where that was
+            system qq[git remote rm origin 2>/dev/null || :];
             # Maybe the remote exists already
             system qq[git remote add '$r_repository' '$r_url' 2>/dev/null || :];
             # But set it to whatever the canonical values are now
