@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use autodie qw(:all);
 use Sys::Hostname qw(hostname);
+use Cwd qw(getcwd);
 use Data::Dumper;
 use constant DEBUG => 1;
 
@@ -85,8 +86,8 @@ REPOSITORY: for my $repository (keys %repositories) {
                 path     => $annex_path,
                 callback => sub {
                     chdir $annex_path;
-                    system "git annex sync";
-                    system "git annex get .";
+                    _system("git annex sync");
+                    _system("git annex get .");
                 },
             };
         }
@@ -95,9 +96,9 @@ REPOSITORY: for my $repository (keys %repositories) {
             path => $annex_path,
             callback => sub {
                 chdir $annex_path;
-                system "git prune --expire now";
-                system "git gc";
-                system "git repack -A -d";
+                _system("git prune --expire now");
+                _system("git gc");
+                _system("git repack -A -d");
             },
         };
 
@@ -118,13 +119,13 @@ REPOSITORY: for my $repository (keys %repositories) {
 
 
             # If this was cloned from anywhere just forget where that was
-            system qq[git remote rm origin 2>/dev/null || :];
+            _system(qq[git remote rm origin 2>/dev/null], 1);
             # Maybe the remote exists already
-            system qq[git remote add '$r_repository' '$r_url' 2>/dev/null || :];
+            _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1);
             # But set it to whatever the canonical values are now
-            system qq[git config 'remote.$r_repository.url' '$r_url'];
+            _system(qq[git config 'remote.$r_repository.url' '$r_url'], 1);
             # Make sure we don't do gc on push
-            system qq[git config gc.auto 0];
+            _system(qq[git config gc.auto 0], 0);
         }
     }
 }
@@ -147,4 +148,24 @@ if ("@ARGV" !~ /\bno-backup\b/) {
         print "Doing a backup to <$path>\n" if DEBUG;
         $callback->();
     }
+}
+
+sub _system {
+    my ($command, $bad_ok) = @_;
+
+    no autodie;
+
+    my $cwd = getcwd();
+    my $ret;
+    if ($ret = system $command) {
+        $ret = ($ret >> 8);
+        if ($bad_ok) {
+            print STDERR "    In <$cwd> the command <$command> failed with <$ret> but we're ignoring it\n";
+        } else {
+            print STDERR "    In <$cwd> the command <$command> failed with <$ret>\n";
+            exit 1;
+        }
+    }
+
+    return $ret;
 }
