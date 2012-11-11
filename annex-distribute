@@ -139,7 +139,7 @@ REPOSITORY: for my $repository (keys %repositories) {
 
 if ("@ARGV" =~ /\bcleanup\b/) {
     # Now sync to the repositories we're backing up for
-    for my $todo_get (@todo_cleanup) {
+    for my $todo_get (reverse @todo_cleanup) {
         my ($path, $callback) = @$todo_get{qw(path callback)};
 
         print "Doing a cleanup of <$path>\n" if DEBUG;
@@ -149,7 +149,7 @@ if ("@ARGV" =~ /\bcleanup\b/) {
 
 if ("@ARGV" !~ /\bno-backup\b/) {
     # Now sync to the repositories we're backing up for
-    for my $todo_get (@todo_get) {
+    for my $todo_get (reverse @todo_get) {
         my ($path, $callback) = @$todo_get{qw(path callback)};
 
         print "Doing a backup to <$path>\n" if DEBUG;
