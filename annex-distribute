@@ -22,13 +22,6 @@ my %repositories = (
         host    => 'snth',
         mode    => MODE_MANUAL,
     },
-    'snth-caddy' => {
-        bare    => 0,
-        annexes => [ qw( audio video avar-images ) ],
-        path    => '/media/caddy/annex',
-        host    => 'snth',
-        mode    => MODE_MANUAL,
-    },
     'snth-teracaddy' => {
         bare    => 0,
         annexes => [ qw( audio video avar-images ) ],
