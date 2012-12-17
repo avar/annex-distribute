@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+use v5.14;
 use strict;
 use warnings;
 use autodie qw(:all);
@@ -17,7 +18,14 @@ use constant {
 };
 
 my $get_limited = sub {
-    _system("git annex get music video");
+    given (getcwd()) {
+        when (/piracy/) {
+            _system("git annex get music video");
+        }
+        default {
+            _system("git annex get .");
+        }
+    }
 };
 
 my %repositories = (
