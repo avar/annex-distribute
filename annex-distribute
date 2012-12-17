@@ -79,7 +79,15 @@ REPOSITORY: for my $repository (keys %repositories) {
     for my $annex (@$annexes) {
         my $annex_path = "$path/$annex";
         print "  Processing annex <$annex>, chdir-ing to <$annex_path>\n" if DEBUG;
-        chdir $annex_path;
+
+        unless (-d $annex_path) {
+            print "  We don't have <$annex_path> yet, creating it\n" if DEBUG;
+            _system("git init $annex_path");
+            chdir $annex_path;
+            _system("git annex init $repository");
+        } else {
+            chdir $annex_path;
+        }
 
         if ($mode == MODE_BACKUP) {
             push @todo_get => {
