@@ -12,47 +12,56 @@ use constant {
     MODE_MANUAL => 1,
     # This tries to get all content from everywhere
     MODE_BACKUP => 2,
+    # This lets you provide a callback
+    MODE_CALLBACK => 3,
+};
+
+my $get_limited = sub {
+    _system("git annex get music video");
 };
 
 my %repositories = (
     'snth' => {
         bare    => 0,
-        annexes => [ qw( audio video avar-images ) ],
+        annexes => [ qw( piracy avar-images ) ],
         path    => '/home/avar/annex',
         host    => 'snth',
         mode    => MODE_MANUAL,
     },
     'snth-teracaddy' => {
         bare    => 0,
-        annexes => [ qw( audio video avar-images ) ],
+        annexes => [ qw( piracy avar-images ) ],
         path    => '/media/teracaddy/annex',
         host    => 'snth',
-        mode    => MODE_BACKUP,
+        mode    => MODE_CALLBACK,
+        get     => $get_limited,
     },
     'freeagent-goflex-drive' => {
         bare    => 0,
-        annexes => [ qw( audio video avar-images ) ],
+        annexes => [ qw( piracy avar-images ) ],
         path    => '/media/FreeAgent GoFlex Drive/annex',
         host    => 'snth',
-        mode    => MODE_BACKUP,
+        mode    => MODE_CALLBACK,
+        get     => $get_limited,
     },
     'goflex-backup' => {
         bare    => 0,
-        annexes => [ qw( audio video avar-images ) ],
+        annexes => [ qw( piracy avar-images ) ],
         path    => '/media/GoFlex Backup/annex',
         host    => 'snth',
-        mode    => MODE_BACKUP,
+        mode    => MODE_CALLBACK,
+        get     => $get_limited,
     },
     'wnixis' => {
-        bare    => 1,
-        annexes => [ qw( audio video ) ],
-        path    => '/provider/annex',
+        bare    => 0,
+        annexes => [ qw( piracy ) ],
+        path    => '/dns/annex',
         host    => 'w.nix.is',
         mode    => MODE_MANUAL,
     },
     'provider' => {
         bare    => 1,
-        annexes => [ qw( audio video ) ],
+        annexes => [ qw( piracy ) ],
         path    => '/provider/annex',
         host    => 'provider.dsg.to',
         mode    => MODE_MANUAL,
@@ -65,7 +74,7 @@ my @todo_cleanup;
 # Ensure that all the repositories have everything else added as a
 # remote annex so "sync" anywhere will sync the whole network.
 REPOSITORY: for my $repository (keys %repositories) {
-    my ($host, $path, $annexes, $bare, $mode) = @{$repositories{$repository}}{qw(host path annexes bare mode)};
+    my ($host, $path, $annexes, $bare, $mode, $get) = @{$repositories{$repository}}{qw(host path annexes bare mode get)};
 
     # Don't know what to do about remote hosts yet
     next REPOSITORY unless $host eq hostname();
@@ -96,6 +105,14 @@ REPOSITORY: for my $repository (keys %repositories) {
                     chdir $annex_path;
                     _system("git annex sync");
                     _system("git annex get .");
+                },
+            };
+        } elsif ($mode == MODE_CALLBACK) {
+            push @todo_get => {
+                path     => $annex_path,
+                callback => sub {
+                    chdir $annex_path;
+                    $get->();
                 },
             };
         }
