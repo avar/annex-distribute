@@ -20,7 +20,7 @@ use constant {
 my $get_limited = sub {
     given (getcwd()) {
         when (/piracy/) {
-            _system("git annex get music video");
+            _system("git annex get music video podcast script books");
         }
         default {
             _system("git annex get .");
