@@ -198,6 +198,8 @@ sub _system {
             print STDERR "    In <$cwd> the command <$command> failed with <$ret>\n";
             exit 1;
         }
+    } else {
+        print STDERR "    Ran command <$command>\n";
     }
 
     return $ret;
