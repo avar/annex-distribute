@@ -42,8 +42,7 @@ my %repositories = (
         annexes => [ qw( piracy avar-images ) ],
         path    => '/media/teracaddy/annex',
         host    => 'snth',
-        mode    => MODE_CALLBACK,
-        get     => $get_limited,
+        mode    => MODE_MANUAL,
     },
     'piracy-backup' => {
         bare    => 0,
