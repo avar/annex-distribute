@@ -60,11 +60,11 @@ my %repositories = (
         mode    => MODE_CALLBACK,
         get     => $get_limited,
     },
-    'wnixis' => {
+    'unixis' => {
         bare    => 0,
         annexes => [ qw( piracy ) ],
         path    => '/dns/annex',
-        host    => 'w.nix.is',
+        host    => 'u.nix.is',
         mode    => MODE_MANUAL,
     },
     'provider' => {
@@ -153,8 +153,8 @@ REPOSITORY: for my $repository (keys %repositories) {
 
             # If this was cloned from anywhere just forget where that was
             _system(qq[git remote rm origin 2>/dev/null], 1);
-            # Forget about the dead freeagent-goflex-drive
-            _system(qq[git remote rm freeagent-goflex-drive 2>/dev/null], 1);
+            # Forget about the dead freeagent-goflex-drive and wnixis
+            _system(qq[git remote rm $_ 2>/dev/null], 1) for qw(freeagent-goflex-drive wnixis);
             # Maybe the remote exists already
             _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1);
             # But set it to whatever the canonical values are now
