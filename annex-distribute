@@ -47,9 +47,9 @@ my %repositories = (
     'freeagent-goflex-drive' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images ) ],
-        path    => '/media/FreeAgent GoFlex Drive/annex',
+        path    => '/media/piracy-backup/annex',
         host    => 'snth',
-        mode    => MODE_CALLBACK,
+        mode    => MODE_BACKUP,
         get     => $get_limited,
     },
     'goflex-backup' => {
