@@ -44,7 +44,7 @@ my %repositories = (
         mode    => MODE_CALLBACK,
         get     => $get_limited,
     },
-    'freeagent-goflex-drive' => {
+    'piracy-backup' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images ) ],
         path    => '/media/piracy-backup/annex',
@@ -153,6 +153,8 @@ REPOSITORY: for my $repository (keys %repositories) {
 
             # If this was cloned from anywhere just forget where that was
             _system(qq[git remote rm origin 2>/dev/null], 1);
+            # Forget about the dead freeagent-goflex-drive
+            _system(qq[git remote rm freeagent-goflex-drive 2>/dev/null], 1);
             # Maybe the remote exists already
             _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1);
             # But set it to whatever the canonical values are now
