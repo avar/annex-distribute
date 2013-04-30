@@ -17,6 +17,18 @@ use constant {
     MODE_CALLBACK => 3,
 };
 
+my $get_limited = sub {
+    given (getcwd()) {
+        when (/piracy/) { # i.e. not for avar-images
+            _system("git annex get music video podcast script books");
+        }
+        default {
+            _system("git annex get .");
+        }
+    }
+};
+
+
 my %repositories = (
     'snth' => {
         bare    => 0,
@@ -31,24 +43,23 @@ my %repositories = (
         path    => '/media/teracaddy/annex',
         host    => 'snth',
         mode    => MODE_CALLBACK,
-        get     => sub {
-            # Disabled for now, maybe get smarter...
-            _system("echo git annex get music video podcast script books");
-        },
+        get     => $get_limited,
     },
     'piracy-backup' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images ) ],
         path    => '/media/piracy-backup/annex',
         host    => 'snth',
-        mode    => MODE_BACKUP,
+        mode    => MODE_CALLBACK,
+        get     => $get_limited,
     },
     'goflex-backup' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images ) ],
         path    => '/media/GoFlex Backup/annex',
         host    => 'snth',
-        mode    => MODE_BACKUP,
+        mode    => MODE_CALLBACK,
+        get     => $get_limited,
     },
     'unixis' => {
         bare    => 0,
