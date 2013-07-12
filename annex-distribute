@@ -6,6 +6,7 @@ use autodie qw(:all);
 use Sys::Hostname qw(hostname);
 use Cwd qw(getcwd);
 use Data::Dumper;
+sub _dumper { Data::Dumper->new([$_[0]])->Useqq(1)->Terse(1)->Indent(0)->Dump() }
 use constant DEBUG => 1;
 
 use constant {
@@ -18,16 +19,8 @@ use constant {
 };
 
 my $get_limited = sub {
-    given (getcwd()) {
-        when (/piracy/) { # i.e. not for avar-images
-            _system("git annex get music video podcast script books");
-        }
-        default {
-            _system("git annex get .");
-        }
-    }
+    _system("git annex get music video podcast script books");
 };
-
 
 my %repositories = (
     'snth' => {
@@ -42,7 +35,10 @@ my %repositories = (
         annexes => [ qw( piracy avar-images ) ],
         path    => '/media/teracaddy/annex',
         host    => 'snth',
-        mode    => MODE_MANUAL,
+        mode    => {
+            piracy        => MODE_MANUAL,
+            'avar-images' => MODE_BACKUP,
+        },
     },
     'piracy-backup' => {
         bare    => 0,
@@ -50,7 +46,10 @@ my %repositories = (
         path    => '/media/piracy-backup/annex',
         host    => 'snth',
         mode    => MODE_CALLBACK,
-        get     => $get_limited,
+        get     => {
+            piracy        => sub { _system("git annex get music video podcast script books") },
+            'avar-images' => MODE_BACKUP,
+        },
     },
     'goflex-backup' => {
         bare    => 0,
@@ -58,7 +57,10 @@ my %repositories = (
         path    => '/media/GoFlex Backup/annex',
         host    => 'snth',
         mode    => MODE_CALLBACK,
-        get     => $get_limited,
+        get     => {
+            piracy        => sub { _system("git annex get music video podcast script books") },
+            'avar-images' => MODE_BACKUP,
+        },
     },
     'unixis' => {
         bare    => 0,
@@ -82,20 +84,23 @@ my @todo_cleanup;
 # Ensure that all the repositories have everything else added as a
 # remote annex so "sync" anywhere will sync the whole network.
 REPOSITORY: for my $repository (keys %repositories) {
-    my ($host, $path, $annexes, $bare, $mode, $get) = @{$repositories{$repository}}{qw(host path annexes bare mode get)};
+    my ($host, $path, $annexes, $bare, $raw_mode, $get) = @{$repositories{$repository}}{qw(host path annexes bare mode get)};
 
     # Don't know what to do about remote hosts yet
     next REPOSITORY unless $host eq hostname();
 
-    print "Got host <$host> path <$path> annexes <@$annexes> bare:<$bare>, mode:<$mode>\n" if DEBUG;
+    print "Got host <$host> path <$path> annexes <@$annexes> bare:<$bare>\n" if DEBUG;
     unless (-d $path) {
         print "The path path <$path> doesn't exist, presumably not mounted, skipping\n" if DEBUG;
         next REPOSITORY;
     }
 
     for my $annex (@$annexes) {
+        my $mode = ref $raw_mode eq 'HASH'
+          ? ($raw_mode->{$annex} || die "PANIC: Couldn't find <$annex> in \$raw_mode <" . _dumper($raw_mode) . ">")
+          : $raw_mode;
         my $annex_path = "$path/$annex";
-        print "  Processing annex <$annex>, chdir-ing to <$annex_path>\n" if DEBUG;
+        print "  Processing annex <$annex> in mode <$mode>, chdir-ing to <$annex_path>\n" if DEBUG;
 
         unless (-d $annex_path) {
             print "  We don't have <$annex_path> yet, creating it\n" if DEBUG;
