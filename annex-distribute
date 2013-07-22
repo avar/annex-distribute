@@ -18,10 +18,6 @@ use constant {
     MODE_CALLBACK => 3,
 };
 
-my $get_limited = sub {
-    _system("git annex get music video podcast script books");
-};
-
 my %repositories = (
     'snth' => {
         bare    => 0,
@@ -48,7 +44,7 @@ my %repositories = (
         mode    => MODE_CALLBACK,
         get     => {
             piracy        => sub { _system("git annex get music video podcast script books") },
-            'avar-images' => MODE_BACKUP,
+            'avar-images' => sub { _system("git annex get .") },
         },
     },
     'goflex-backup' => {
@@ -59,7 +55,7 @@ my %repositories = (
         mode    => MODE_CALLBACK,
         get     => {
             piracy        => sub { _system("git annex get music video podcast script books") },
-            'avar-images' => MODE_BACKUP,
+            'avar-images' => sub { _system("git annex get .") },
         },
     },
     'unixis' => {
@@ -84,7 +80,7 @@ my @todo_cleanup;
 # Ensure that all the repositories have everything else added as a
 # remote annex so "sync" anywhere will sync the whole network.
 REPOSITORY: for my $repository (keys %repositories) {
-    my ($host, $path, $annexes, $bare, $raw_mode, $get) = @{$repositories{$repository}}{qw(host path annexes bare mode get)};
+    my ($host, $path, $annexes, $bare, $raw_mode, $raw_get) = @{$repositories{$repository}}{qw(host path annexes bare mode get)};
 
     # Don't know what to do about remote hosts yet
     next REPOSITORY unless $host eq hostname();
@@ -99,6 +95,9 @@ REPOSITORY: for my $repository (keys %repositories) {
         my $mode = ref $raw_mode eq 'HASH'
           ? ($raw_mode->{$annex} || die "PANIC: Couldn't find <$annex> in \$raw_mode <" . _dumper($raw_mode) . ">")
           : $raw_mode;
+        my $get = ref $raw_get eq 'HASH'
+          ? ($raw_get->{$annex} || die "PANIC: Couldn't find <$annex> in \$raw_get <" . _dumper($raw_get) . ">")
+          : $raw_get;
         my $annex_path = "$path/$annex";
         print "  Processing annex <$annex> in mode <$mode>, chdir-ing to <$annex_path>\n" if DEBUG;
 
