@@ -124,6 +124,7 @@ REPOSITORY: for my $repository (keys %repositories) {
                 path     => $annex_path,
                 callback => sub {
                     chdir $annex_path;
+                    _system("git annex sync");
                     $get->();
                 },
             };
