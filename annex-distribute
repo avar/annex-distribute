@@ -43,7 +43,7 @@ my %repositories = (
         host    => 'snth',
         mode    => MODE_CALLBACK,
         get     => {
-            piracy        => sub { _system("git annex get music video podcast books") },
+            piracy        => sub { _system("git annex get music video podcast script books") },
             'avar-images' => sub { _system("git annex get .") },
         },
     },
@@ -54,7 +54,7 @@ my %repositories = (
         host    => 'snth',
         mode    => MODE_CALLBACK,
         get     => {
-            piracy        => sub { _system("git annex get music video podcast books") },
+            piracy        => sub { _system("git annex get music video podcast script books") },
             'avar-images' => sub { _system("git annex get .") },
         },
     },
