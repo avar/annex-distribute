@@ -65,13 +65,6 @@ my %repositories = (
         host    => 'u.nix.is',
         mode    => MODE_MANUAL,
     },
-    'provider' => {
-        bare    => 1,
-        annexes => [ qw( piracy ) ],
-        path    => '/provider/annex',
-        host    => 'provider.dsg.to',
-        mode    => MODE_MANUAL,
-    },
 );
 
 my @todo_get;
@@ -158,8 +151,8 @@ REPOSITORY: for my $repository (keys %repositories) {
 
             # If this was cloned from anywhere just forget where that was
             _system(qq[git remote rm origin 2>/dev/null], 1);
-            # Forget about the dead freeagent-goflex-drive and wnixis
-            _system(qq[git remote rm $_ 2>/dev/null], 1) for qw(freeagent-goflex-drive wnixis);
+            # Forget about dead remotes
+            _system(qq[git remote rm $_ 2>/dev/null], 1) for qw(freeagent-goflex-drive wnixis provider);
             # Maybe the remote exists already
             _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1);
             # But set it to whatever the canonical values are now
