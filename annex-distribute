@@ -178,7 +178,7 @@ if ("@ARGV" !~ /\bno-backup\b/) {
     for my $todo_get (reverse @todo_get) {
         my ($path, $callback) = @$todo_get{qw(path callback)};
 
-        print "Executing a backup callback in <$path>\n" if DEBUG;
+        print "Executing a callback in <$path>\n" if DEBUG;
         $callback->();
     }
 }
