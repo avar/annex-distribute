@@ -80,6 +80,7 @@ my %repositories = (
 
 my @todo_get;
 my @todo_cleanup;
+my @todo_cleanup_unused;
 
 # Ensure that all the repositories have everything else added as a
 # remote annex so "sync" anywhere will sync the whole network.
@@ -144,6 +145,15 @@ REPOSITORY: for my $repository (keys %repositories) {
             },
         };
 
+        push @todo_cleanup_unused => {
+            path => $annex_path,
+            callback => sub {
+                chdir $annex_path;
+                _system("git annex unused");
+                _system("git annex dropunused all");
+            },
+        };
+
         R_REPOSITORY: for my $r_repository (grep { $_ ne $repository } keys %repositories) {
             my ($r_host, $r_path, $r_annexes, $r_bare, $r_mode) = @{$repositories{$r_repository}}{qw(host path annexes bare mode)};
 
@@ -180,6 +190,16 @@ if ("@ARGV" =~ /\bcleanup\b/) {
         my ($path, $callback) = @$todo_get{qw(path callback)};
 
         print "Doing a cleanup of <$path>\n" if DEBUG;
+        $callback->();
+    }
+}
+
+if ("@ARGV" =~ /\brmunused\b/) {
+    # Now sync to the repositories we're backing up for
+    for my $todo_get (reverse @todo_cleanup_unused) {
+        my ($path, $callback) = @$todo_get{qw(path callback)};
+
+        print "Doing a cleanup of unused data for <$path>\n" if DEBUG;
         $callback->();
     }
 }
