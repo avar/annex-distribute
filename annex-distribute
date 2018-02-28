@@ -69,6 +69,17 @@ my %repositories = (
             'avar-images' => sub { _system("git annex get .") },
         },
     },
+    '4tb-backup' => {
+        bare    => 0,
+        annexes => [ qw( piracy avar-images ) ],
+        path    => '/media/avar/4TB/annex',
+        host    => 'evledraar',
+        mode    => MODE_CALLBACK,
+        get     => {
+            piracy        => sub { _system("git annex get .") },
+            'avar-images' => sub { _system("git annex get .") },
+        },
+    },
     'unixis' => {
         bare    => 0,
         annexes => [ qw( piracy ) ],
