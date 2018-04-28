@@ -76,7 +76,7 @@ my %repositories = (
         host    => 'evledraar',
         mode    => MODE_CALLBACK,
         get     => {
-            piracy        => sub { _system("git annex get .") },
+            piracy        => sub { _system("git annex get music podcast script books") },
             'avar-images' => sub { _system("git annex get .") },
         },
     },
