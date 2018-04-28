@@ -36,28 +36,6 @@ my %repositories = (
             'avar-images' => MODE_BACKUP,
         },
     },
-    'piracy-backup' => {
-        bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
-        path    => '/media/avar/piracy-backup/annex',
-        host    => 'evledraar',
-        mode    => MODE_CALLBACK,
-        get     => {
-            piracy        => sub { _system("git annex get music podcast script books") },
-            'avar-images' => sub { _system("git annex get .") },
-        },
-    },
-    'goflex-backup' => {
-        bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
-        path    => '/media/avar/GoFlex Backup/annex',
-        host    => 'evledraar',
-        mode    => MODE_CALLBACK,
-        get     => {
-            piracy        => sub { _system("git annex get podcast script") },
-            'avar-images' => sub { _system("git annex get .") },
-        },
-    },
     '2tb-backup' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images ) ],
@@ -184,7 +162,7 @@ REPOSITORY: for my $repository (keys %repositories) {
             # If this was cloned from anywhere just forget where that was
             _system(qq[git remote rm origin 2>/dev/null], 1);
             # Forget about dead remotes
-            _system(qq[git remote rm $_ 2>/dev/null], 1) for qw(freeagent-goflex-drive wnixis provider);
+            _system(qq[git remote rm $_ 2>/dev/null], 1) for qw(freeagent-goflex-drive wnixis provider piracy-backup goflex-backup);
             # Maybe the remote exists already
             _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1);
             # But set it to whatever the canonical values are now
