@@ -36,6 +36,26 @@ my %repositories = (
             'avar-images' => MODE_BACKUP,
         },
     },
+    '1.5tb-gfb' => {
+        bare    => 0,
+        annexes => [ qw( piracy avar-images ) ],
+        path    => '/media/avar/1.5TB-gfb/annex',
+        host    => 'evledraar',
+        mode    => {
+            piracy        => MODE_MANUAL,
+            'avar-images' => MODE_BACKUP,
+        },
+    },
+    '1.5tb-pb' => {
+        bare    => 0,
+        annexes => [ qw( piracy avar-images ) ],
+        path    => '/media/avar/1.5TB-pb/annex',
+        host    => 'evledraar',
+        mode    => {
+            piracy        => MODE_MANUAL,
+            'avar-images' => MODE_BACKUP,
+        },
+    },
     '2tb-backup' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images ) ],
