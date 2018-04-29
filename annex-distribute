@@ -21,61 +21,66 @@ use constant {
 my %repositories = (
     'snth' => {
         bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
+        annexes => [ qw( piracy avar-images private ) ],
         path    => '/home/avar/annex',
         host    => 'evledraar',
         mode    => MODE_MANUAL,
     },
     'snth-teracaddy' => {
         bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
+        annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/teracaddy/annex',
         host    => 'evledraar',
         mode    => {
             piracy        => MODE_MANUAL,
             'avar-images' => MODE_BACKUP,
+            private       => MODE_BACKUP,
         },
     },
     '1.5tb-gfb' => {
         bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
+        annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/1.5TB-gfb/annex',
         host    => 'evledraar',
         mode    => {
             piracy        => MODE_MANUAL,
             'avar-images' => MODE_BACKUP,
+            private       => MODE_BACKUP,
         },
     },
     '1.5tb-pb' => {
         bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
+        annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/1.5TB-pb/annex',
         host    => 'evledraar',
         mode    => {
             piracy        => MODE_MANUAL,
             'avar-images' => MODE_BACKUP,
+            private       => MODE_BACKUP,
         },
     },
     '2tb-backup' => {
         bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
+        annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/2TB/annex',
         host    => 'evledraar',
         mode    => MODE_CALLBACK,
         get     => {
             piracy        => sub { _system("git annex get music podcast script books") },
             'avar-images' => sub { _system("git annex get .") },
+            private       => sub { _system("git annex get .") },
         },
     },
     '4tb-backup' => {
         bare    => 0,
-        annexes => [ qw( piracy avar-images ) ],
+        annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/4TB/annex',
         host    => 'evledraar',
         mode    => MODE_CALLBACK,
         get     => {
             piracy        => sub { _system("git annex get music podcast script books") },
             'avar-images' => sub { _system("git annex get .") },
+            private       => sub { _system("git annex get .") },
         },
     },
     'unixis' => {
