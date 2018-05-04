@@ -41,7 +41,7 @@ my %repositories = (
         path    => '/media/avar/1.5TB-gfb/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => MODE_MANUAL,
+            piracy        => sub { _system("git annex get podcast") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
@@ -52,7 +52,7 @@ my %repositories = (
         path    => '/media/avar/1.5TB-pb/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => MODE_MANUAL,
+            piracy        => sub { _system("git annex get podcast") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
