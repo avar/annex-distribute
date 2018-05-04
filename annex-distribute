@@ -11,11 +11,9 @@ use constant DEBUG => 1;
 
 use constant {
     # This only gets synced to/from manually
-    MODE_MANUAL => 1,
+    MODE_MANUAL => "manual",
     # This tries to get all content from everywhere
-    MODE_BACKUP => 2,
-    # This lets you provide a callback
-    MODE_CALLBACK => 3,
+    MODE_BACKUP => "backup",
 };
 
 my %repositories = (
@@ -24,14 +22,14 @@ my %repositories = (
         annexes => [ qw( piracy avar-images private ) ],
         path    => '/home/avar/annex',
         host    => 'evledraar',
-        mode    => MODE_MANUAL,
+        get     => MODE_MANUAL,
     },
     'snth-teracaddy' => {
         bare    => 0,
         annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/teracaddy/annex',
         host    => 'evledraar',
-        mode    => {
+        get     => {
             piracy        => MODE_MANUAL,
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
@@ -42,7 +40,7 @@ my %repositories = (
         annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/1.5TB-gfb/annex',
         host    => 'evledraar',
-        mode    => {
+        get     => {
             piracy        => MODE_MANUAL,
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
@@ -53,7 +51,7 @@ my %repositories = (
         annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/1.5TB-pb/annex',
         host    => 'evledraar',
-        mode    => {
+        get     => {
             piracy        => MODE_MANUAL,
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
@@ -64,11 +62,10 @@ my %repositories = (
         annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/2TB/annex',
         host    => 'evledraar',
-        mode    => MODE_CALLBACK,
         get     => {
             piracy        => sub { _system("git annex get music podcast script books") },
-            'avar-images' => sub { _system("git annex get .") },
-            private       => sub { _system("git annex get .") },
+            'avar-images' => MODE_BACKUP,
+            private       => MODE_BACKUP,
         },
     },
     '4tb-backup' => {
@@ -76,11 +73,10 @@ my %repositories = (
         annexes => [ qw( piracy avar-images private ) ],
         path    => '/media/avar/4TB/annex',
         host    => 'evledraar',
-        mode    => MODE_CALLBACK,
         get     => {
             piracy        => sub { _system("git annex get music podcast script books") },
-            'avar-images' => sub { _system("git annex get .") },
-            private       => sub { _system("git annex get .") },
+            'avar-images' => MODE_BACKUP,
+            private       => MODE_BACKUP,
         },
     },
     'unixis' => {
@@ -88,7 +84,7 @@ my %repositories = (
         annexes => [ qw( piracy ) ],
         path    => '/dns/annex',
         host    => 'leech@u.nix.is',
-        mode    => MODE_MANUAL,
+        get     => MODE_MANUAL,
     },
 );
 
@@ -111,14 +107,12 @@ REPOSITORY: for my $repository (keys %repositories) {
     }
 
     for my $annex (@$annexes) {
-        my $mode = ref $raw_mode eq 'HASH'
-          ? ($raw_mode->{$annex} || die "PANIC: Couldn't find <$annex> in \$raw_mode <" . _dumper($raw_mode) . ">")
-          : $raw_mode;
         my $get = ref $raw_get eq 'HASH'
           ? ($raw_get->{$annex} || die "PANIC: Couldn't find <$annex> in \$raw_get <" . _dumper($raw_get) . ">")
           : $raw_get;
+        my $get_str = get_str($get);
         my $annex_path = "$path/$annex";
-        print "  Processing annex <$annex> in mode <$mode>, chdir-ing to <$annex_path>\n" if DEBUG;
+        print "  Processing annex <$annex> in mode <$get_str>, chdir-ing to <$annex_path>\n" if DEBUG;
 
         unless (-d $annex_path) {
             print "  We don't have <$annex_path> yet, creating it\n" if DEBUG;
@@ -129,25 +123,18 @@ REPOSITORY: for my $repository (keys %repositories) {
             chdir $annex_path;
         }
 
-        if ($mode == MODE_BACKUP) {
-            push @todo_get => {
-                path     => $annex_path,
-                callback => sub {
-                    chdir $annex_path;
-                    _system("git annex sync");
+        push @todo_get => {
+            path     => $annex_path,
+            callback => sub {
+                chdir $annex_path;
+                _system("git annex sync");
+                if ($get eq MODE_BACKUP) {
                     _system("git annex get .");
-                },
-            };
-        } elsif ($mode == MODE_CALLBACK) {
-            push @todo_get => {
-                path     => $annex_path,
-                callback => sub {
-                    chdir $annex_path;
-                    _system("git annex sync");
+                } elsif (ref $get eq 'CODE') {
                     $get->();
-                },
-            };
-        }
+                }
+            },
+        };
 
         push @todo_cleanup => {
             path => $annex_path,
@@ -169,7 +156,8 @@ REPOSITORY: for my $repository (keys %repositories) {
         };
 
         R_REPOSITORY: for my $r_repository (grep { $_ ne $repository } keys %repositories) {
-            my ($r_host, $r_path, $r_annexes, $r_bare, $r_mode) = @{$repositories{$r_repository}}{qw(host path annexes bare mode)};
+            my ($r_host, $r_path, $r_annexes, $r_bare, $r_get) = @{$repositories{$r_repository}}{qw(host path annexes bare get)};
+            my $r_get_str = get_str($r_get);
 
             my $r_url = $r_host eq hostname() ? $r_path : "ssh://$r_host$r_path";
             $r_url .= "/$annex";
@@ -179,7 +167,7 @@ REPOSITORY: for my $repository (keys %repositories) {
             @r_annexes{@$r_annexes} = ();
 
             my $r_should_add = exists $r_annexes{$annex};
-            printf "    Will %s adding remote <$r_host> url <$r_url> path <$r_path> annexes <@$r_annexes> bare:<$r_bare>, mode:<$r_mode>\n",
+            printf "    Will %s adding remote <$r_host> url <$r_url> path <$r_path> annexes <@$r_annexes> bare:<$r_bare>, get:<$r_get>\n",
                   $r_should_add ? 'be' : 'NOT BE' if DEBUG;
             next R_REPOSITORY unless $r_should_add;
 
@@ -248,4 +236,14 @@ sub _system {
     }
 
     return $ret;
+}
+
+sub get_str {
+    my ($get) = @_;
+
+    my $get_str = ref $get eq 'CODE'
+        ? "callback"
+        : $get;
+
+    return $get_str;
 }
