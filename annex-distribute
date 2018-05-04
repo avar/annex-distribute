@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use v5.14;
 use strict;
-use warnings;
+use warnings FATAL => "all";
 use autodie qw(:all);
 use Sys::Hostname qw(hostname);
 use Cwd qw(getcwd);
