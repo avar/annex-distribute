@@ -173,15 +173,15 @@ REPOSITORY: for my $repository (keys %repositories) {
 
 
             # If this was cloned from anywhere just forget where that was
-            _system(qq[git remote rm origin 2>/dev/null], 1);
+            _system(qq[git remote rm origin 2>/dev/null], 1, 1);
             # Forget about dead remotes
-            _system(qq[git remote rm $_ 2>/dev/null], 1) for qw(freeagent-goflex-drive wnixis provider piracy-backup goflex-backup);
+            _system(qq[git remote rm $_ 2>/dev/null], 1, 1) for qw(freeagent-goflex-drive wnixis provider piracy-backup goflex-backup);
             # Maybe the remote exists already
-            _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1);
+            _system(qq[git remote add '$r_repository' '$r_url' 2>/dev/null], 1, 1);
             # But set it to whatever the canonical values are now
-            _system(qq[git config 'remote.$r_repository.url' '$r_url'], 1);
+            _system(qq[git config 'remote.$r_repository.url' '$r_url'], 1, 1);
             # Make sure we don't do gc on push
-            _system(qq[git config gc.auto 0], 0);
+            _system(qq[git config gc.auto 0], 0, 1);
         }
     }
 }
@@ -217,7 +217,7 @@ if ("@ARGV" !~ /\bno-backup\b/) {
 }
 
 sub _system {
-    my ($command, $bad_ok) = @_;
+    my ($command, $bad_ok, $quiet) = @_;
 
     no autodie;
 
@@ -226,13 +226,13 @@ sub _system {
     if ($ret = system $command) {
         $ret = ($ret >> 8);
         if ($bad_ok) {
-            print STDERR "    In <$cwd> the command <$command> failed with <$ret> but we're ignoring it\n";
+            print STDERR "    In <$cwd> the command <$command> failed with <$ret> but we're ignoring it\n" unless $quiet;
         } else {
-            print STDERR "    In <$cwd> the command <$command> failed with <$ret>\n";
+            print STDERR "    In <$cwd> the command <$command> failed with <$ret>\n" unless $quiet;
             exit 1;
         }
     } else {
-        print STDERR "    Ran command <$command>\n";
+        print STDERR "    Ran command <$command>\n" unless $quiet;
     }
 
     return $ret;
