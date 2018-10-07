@@ -140,9 +140,7 @@ REPOSITORY: for my $repository (keys %repositories) {
             path => $annex_path,
             callback => sub {
                 chdir $annex_path;
-                _system("git gc");
-                _system("git repack -A -d");
-                _system("git prune --expire now");
+                _system("git -c gc.pruneExpire=1.day.ago gc");
             },
         };
 
