@@ -83,7 +83,7 @@ my %repositories = (
         bare    => 0,
         annexes => [ qw( piracy ) ],
         path    => '/dns/annex',
-        host    => 'leech@u.nix.is',
+        host    => 'leech@vm.nix.is',
         get     => MODE_MANUAL,
     },
 );
