@@ -52,7 +52,7 @@ my %repositories = (
         path    => '/media/avar/2TB/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get music podcast script books video/movies/Icelandic") },
+            piracy        => sub { _system("git annex get podcast script books video/movies/Icelandic") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
