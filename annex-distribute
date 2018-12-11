@@ -112,6 +112,15 @@ REPOSITORY: for my $repository (keys %repositories) {
     next REPOSITORY unless $host eq hostname();
 
     print "Got host <$host> path <$path> annexes <@$annexes> bare:<$bare>\n" if DEBUG;
+
+    {
+        my $up_path = $path =~ s[/annex$][]sr;
+        my $lf_path = "$up_path/lost+found";
+        if (-d $lf_path && !-d $path) {
+            print "The path path <$path> doesn't exist, but <$lf_path> does. Bootstrapping a new disk!\n" if DEBUG;
+            _system("mkdir -p $path");
+        }
+    }
     unless (-d $path) {
         print "The path path <$path> doesn't exist, presumably not mounted, skipping\n" if DEBUG;
         next REPOSITORY;
