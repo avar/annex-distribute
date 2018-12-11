@@ -53,8 +53,8 @@ my %repositories = (
         host    => 'evledraar',
         get     => {
             piracy        => sub { _system("git annex get podcast script books video/movies/Icelandic") },
-            'avar-images' => MODE_BACKUP,
-            private       => MODE_BACKUP,
+            'avar-images' => sub { _system("git annex get DCIM* WhatsApp-Media") },
+            private       => MODE_MANUAL,
         },
     },
     '3tb-backup' => {
