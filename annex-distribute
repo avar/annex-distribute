@@ -79,6 +79,17 @@ my %repositories = (
             private       => MODE_BACKUP,
         },
     },
+    '4tbwd-backup' => {
+        bare    => 0,
+        annexes => [ qw( piracy avar-images private ) ],
+        path    => '/media/avar/4TBWD/annex',
+        host    => 'evledraar',
+        get     => {
+            piracy        => sub { _system("git annex get music podcast script books video/movies/Icelandic") },
+            'avar-images' => MODE_BACKUP,
+            private       => MODE_BACKUP,
+        },
+    },
     'unixis' => {
         bare    => 0,
         annexes => [ qw( piracy ) ],
