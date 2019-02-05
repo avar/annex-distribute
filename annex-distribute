@@ -30,7 +30,7 @@ my %repositories = (
         path    => '/media/avar/1.5TB-gfb/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get podcast") },
+            piracy        => sub { _system_or_warn("git annex get podcast") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
@@ -41,7 +41,7 @@ my %repositories = (
         path    => '/media/avar/1.5TB-pb/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get podcast") },
+            piracy        => sub { _system_or_warn("git annex get podcast") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
@@ -52,8 +52,8 @@ my %repositories = (
         path    => '/media/avar/2TB/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get podcast script books video/movies/Icelandic") },
-            'avar-images' => sub { _system("git annex get DCIM* WhatsApp-Media") },
+            piracy        => sub { _system_or_warn("git annex get podcast script books video/movies/Icelandic") },
+            'avar-images' => sub { _system_or_warn("git annex get DCIM* WhatsApp-Media") },
             private       => MODE_MANUAL,
         },
     },
@@ -63,7 +63,7 @@ my %repositories = (
         path    => '/media/avar/3TB/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get music podcast script books video/movies/Icelandic") },
+            piracy        => sub { _system_or_warn("git annex get music podcast script books video/movies/Icelandic") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
@@ -74,7 +74,7 @@ my %repositories = (
         path    => '/media/avar/4TB/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get music podcast script books video/movies/Icelandic") },
+            piracy        => sub { _system_or_warn("git annex get music podcast script books video/movies/Icelandic") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
@@ -85,7 +85,7 @@ my %repositories = (
         path    => '/media/avar/4TBWD/annex',
         host    => 'evledraar',
         get     => {
-            piracy        => sub { _system("git annex get music podcast script books video/movies/Icelandic") },
+            piracy        => sub { _system_or_warn("git annex get music podcast script books video/movies/Icelandic") },
             'avar-images' => MODE_BACKUP,
             private       => MODE_BACKUP,
         },
@@ -149,7 +149,7 @@ REPOSITORY: for my $repository (keys %repositories) {
                 chdir $annex_path;
                 _system("git annex sync");
                 if ($get eq MODE_BACKUP) {
-                    _system("git annex get .");
+                    _system_or_warn("git annex get .");
                 } elsif (ref $get eq 'CODE') {
                     $get->();
                 }
@@ -254,6 +254,10 @@ sub _system {
     }
 
     return $ret;
+}
+
+sub _system_or_warn {
+    _system(@_, 1);
 }
 
 sub get_str {
